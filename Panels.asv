@@ -1356,7 +1356,6 @@ cd(folder_code)
     fig = figure;
     dataEfast = tempSti(:,:,nFig);
     dataEfast(end-2,:) = []; %remove beta
-    temp_efast_var(end-2) = '';
     hold on
     b = bar(dataEfast,'FaceColor','flat');
     yl = ylim;
@@ -1380,7 +1379,7 @@ cd(folder_code)
             b(1).CData(nParam,:) = hex2rgb(color_black);
         end
     end
-    xticks([1:size(dataEfast,1)])
+    xticks([1:size(tempSti,1)])
     ylabel('S_{Ti}')
     set(gca,'XTickLabel',temp_efast_var,'LineWidth',axis_linewidth,'FontSize',axis_fontsize)
     set(fig,'Units','Inches');
