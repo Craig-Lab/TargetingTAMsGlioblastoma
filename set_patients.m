@@ -17,10 +17,10 @@ p.volDiagnosis = 17700;%Average volume at diagnosis (10^6 cells)
 
 %% Parameters for tumour equation
 if ~isfield(p,'beta')
-    p.beta = 0.013;%Tumour intrinsic growth rate (1/day)
+    p.beta = 0.0134;%Tumour intrinsic growth rate (1/day)
 end
 if ~isfield(p,'alpha')
-    p.alpha = 0.027;%Maximal killing rate of the GBM cells by the CD8+ T cells (1/day)
+    p.alpha = 0.0261;%Maximal killing rate of the GBM cells by the CD8+ T cells (1/day)
 end
 
 %% Parameters for TAM equations
@@ -38,7 +38,7 @@ if ~isfield(p,'muM2')
 end
 p.muM1 = 0.075;%M1-M2 polarisation rate (1/day)
 if ~isfield(p,'q')
-    p.q = 16/21; %Fraction of TAMs that acquire M2 phenotype upon activate (unit-less)
+    p.q = 151/201; %Fraction of TAMs that acquire M2 phenotype upon activate (unit-less)
 end
 
 %set to 0 if you want to simulate without inhibition of the T cells, and to 1 to simulate with inhibition
@@ -153,7 +153,7 @@ p.hTMZ = 0.5682;%TMZ Hill coefficient (unit-less)
 p.IC50TMZ = 0.0011;%TMZ IC50 (mg/mL)
 
 %% Set time info and variables
-p.timepoints = linspace(0,5*365,12000); %5 years
+p.timepoints = linspace(0,10*365,12000); %5 years
 p.tspan = [0 p.timepoints(end)];%set timespan for simulations
 
 %% Parameters to model no treatment administration

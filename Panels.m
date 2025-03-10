@@ -1035,7 +1035,7 @@ cd(folder_code)
     legend({'Fit','Data'},'Location','northwest')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Supplementary Figures 7, 9 and 10:  Visualise Virtual patients distributions
+%% Supplementary Figures 7, 10 and 11:  Visualise Virtual patients distributions
 
     cd(folder_VCT)
     %You can change the data set you want to visualise
@@ -1050,8 +1050,8 @@ cd(folder_code)
     q = VCTPatients(:,6);
     
     %General population
-    %muTumour = [0.013 0.0375 0.7619];
-    %stdTumour = [0.0004 0.01127 0.2373];
+    %muTumour = [0.013 0.0375 0.7512];
+    %stdTumour = [0.0004 0.01127 0.0783];
 
     %M1-biased
     %muTumour = [0.013 0.0375 0.25];
@@ -1127,7 +1127,7 @@ cd(folder_code)
     set(gca,'FontSize',axis_fontsize,'LineWidth',axis_linewidth)
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Supplementary Figure 8: Kaplan-meier curves depending on median of parameters
+%% Supplementary Figure 9: Kaplan-meier curves depending on median of parameters
 
     cd(folder_VCT)
     load('VCTPatients.mat')
@@ -1199,9 +1199,9 @@ cd(folder_code)
     legend({'Minimum survival','Maximum survival','Death threshold'},'FontSize',10)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Supplementary Figure 5: eFAST: Plot Sti for tumour burden 
+%% Supplementary Figure 5: eFAST: Plot Sti for tumour burden - beta
     cd(folder_efast)
-    load('Model_efastNs1000Nr5TumourBurden.mat')
+    load('Model_efastNs1000Nr5_tumourburden.mat')
     cd(folder_code)
     
     test_pvalue = 0.01;% 
@@ -1220,7 +1220,7 @@ cd(folder_code)
     temp_pval(9,:) = s_Y.p_Sti(8,:);
 
     tempSti(end-1,:) = [];
-    temp_pval(end-1,:) = [];
+    temp_pval(end,:) = [];
     
     temp_efast_var={'\lambda_M','q','\mu_{M1}','\mu_{M2}','\eta_1','\alpha_{AT}','\alpha_2','\beta','\mu_P','dummy'};%,
     temp_efast_var(end-1) = '';
@@ -1238,7 +1238,62 @@ cd(folder_code)
         end
     end
     fig = figure;
+    dataEfast = tempSti(end-1,:,nFig);
+    hold on
+    b = bar(dataEfast,'FaceColor','flat');
+    yl = ylim;
+    b(1).CData = hex2rgb(color_palegreen);
+    xticks([1])
+    ylabel('S_{Ti}')
+    set(gca,'XTickLabel',temp_efast_var,'LineWidth',axis_linewidth,'FontSize',axis_fontsize)
+    set(fig,'Units','Inches');
+    pos = get(fig,'Position');
+    set(fig,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig)
+
+%% Supplementary Figure 5: eFAST: Plot Sti for tumour burden - without beta
+    cd(folder_efast)
+    load('Model_efastNs1000Nr5_tumourburden_withoutBeta.mat')
+    cd(folder_code)
+    
+    test_pvalue = 0.01;%
+    color_pvalue = [251 128 114]./255;
+    
+    tempSti = s_Y.Sti;
+    tempSti(5,:) = s_Y.Sti(7,:);
+    tempSti(7,:) = s_Y.Sti(9,:);
+    tempSti(8,:) = s_Y.Sti(5,:);
+    tempSti(9,:) = s_Y.Sti(8,:);
+    
+    temp_pval = s_Y.p_Sti;
+    temp_pval(5,:) = s_Y.p_Sti(7,:);
+    temp_pval(7,:) = s_Y.p_Sti(9,:);
+    temp_pval(8,:) = s_Y.p_Sti(5,:);
+    temp_pval(9,:) = s_Y.p_Sti(8,:);
+    
+    tempSti(end-1,:) = [];
+    temp_pval(end,:) = [];
+    
+    temp_efast_var={'\lambda_M','q','\mu_{M1}','\mu_{M2}','\eta_1','\alpha_{AT}','\alpha_2','\beta','\mu_P','dummy'};%,
+    temp_efast_var(end-1) = '';
+
+
+    nFig = 1;
+    significant = zeros(0,2);
+    p_values = squeeze(temp_pval(:,1,:,nFig));
+    for kk=1:size(p_values,1)
+        for ll=1:size(p_values,2)
+            p_to_test = p_values(kk,ll);
+            if (p_to_test <= test_pvalue) && (tempSti(kk,1)>tempSti(end,1))
+                significant(end+1,1) = ll;
+                significant(end,2) = kk;
+            end
+        end
+    end
+    
+    fig = figure;
     dataEfast = tempSti(:,:,nFig);
+    dataEfast(end-2,:) = []; %remove beta
     hold on
     b = bar(dataEfast,'FaceColor','flat');
     yl = ylim;
@@ -1251,14 +1306,12 @@ cd(folder_code)
             ypt = ypt+0.01*(yl(2)-yl(1));
         end
     end
-    for nParam=1:size(tempSti,1)
+    for nParam=1:size(dataEfast,1)
         if nParam<6
             b(1).CData(nParam,:) = hex2rgb(color_paleblue);
         elseif nParam<8
             b(1).CData(nParam,:) = hex2rgb(color_palered);
-        elseif nParam<9
-            b(1).CData(nParam,:) = hex2rgb(color_palegreen);
-        elseif nParam<size(tempSti,1)
+        elseif nParam<size(dataEfast,1)
             b(1).CData(nParam,:) = hex2rgb(color_paleorange);
         else
             b(1).CData(nParam,:) = hex2rgb(color_black);
@@ -1267,11 +1320,65 @@ cd(folder_code)
     xticks([1:size(tempSti,1)])
     ylabel('S_{Ti}')
     set(gca,'XTickLabel',temp_efast_var,'LineWidth',axis_linewidth,'FontSize',axis_fontsize)
+    set(fig,'Units','Inches');
+    pos = get(fig,'Position');
+    set(fig,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% eFAST: Plot Sti for SE(SOC+ICI)
+
+%% Supplementary Figure 5: eFAST: Plot Sti for SE(SOC+ICI) - beta
     cd(folder_efast)
-    load('Model_efastNs1000Nr5ICISuppEfficacy.mat')
+    load('Model_efastNs1000Nr5_nivolumab_withBeta.mat')
+    cd(folder_code)
+    
+    test_pvalue = 0.01;%
+    color_pvalue = [251 128 114]./255;
+    
+    tempSti = s_Y.Sti;
+    tempSti(5,:) = s_Y.Sti(7,:);
+    tempSti(7,:) = s_Y.Sti(9,:);
+    tempSti(8,:) = s_Y.Sti(5,:);
+    tempSti(9,:) = s_Y.Sti(8,:);
+    
+    temp_pval = s_Y.p_Sti;
+    temp_pval(5,:) = s_Y.p_Sti(7,:);
+    temp_pval(7,:) = s_Y.p_Sti(9,:);
+    temp_pval(8,:) = s_Y.p_Sti(5,:);
+    temp_pval(9,:) = s_Y.p_Sti(8,:);
+    
+    temp_efast_var={'\lambda_M','q','\mu_{M1}','\mu_{M2}','\eta_1','\alpha_{AT}','\alpha_2','\beta','\mu_P','dummy'};%,
+    nFig = 1;
+    significant = zeros(0,2);
+    p_values = squeeze(temp_pval(:,1,:,nFig));
+    for kk=1:size(p_values,1)
+        for ll=1:size(p_values,2)
+            p_to_test = p_values(kk,ll);
+            if (p_to_test <= test_pvalue) && (tempSti(kk,1)>tempSti(end,1))
+                significant(end+1,1) = ll;
+                significant(end,2) = kk;
+            end
+        end
+    end
+    
+    fig = figure;
+    dataEfast = tempSti(end-2,:,nFig);
+    hold on
+    b = bar(dataEfast,'FaceColor','flat');
+    yl = ylim;
+    b(1).CData = hex2rgb(color_palegreen);
+    xticks([1])
+    xtickangle(45)
+    ylabel('S_{Ti}')
+    set(gca,'XTickLabel',{'dummy'},'LineWidth',axis_linewidth,'FontSize',axis_fontsize)
+    set(fig,'Units','Inches');
+    pos = get(fig,'Position');
+    set(fig,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig)
+
+%% Supplementary Figure 5: eFAST: Plot Sti for SE(SOC+ICI) - without beta
+    cd(folder_efast)
+    load('Model_efastNs1000Nr5_nivolumab_withoutBeta.mat')
     cd(folder_code)
     
     test_pvalue = 0.01;%
@@ -1305,6 +1412,7 @@ cd(folder_code)
     
     fig = figure;
     dataEfast = tempSti(:,:,nFig);
+    dataEfast(end-2,:) = []; %remove beta
     hold on
     b = bar(dataEfast,'FaceColor','flat');
     yl = ylim;
@@ -1317,14 +1425,12 @@ cd(folder_code)
             ypt = ypt+0.01*(yl(2)-yl(1));
         end
     end
-    for nParam=1:size(tempSti,1)
+    for nParam=1:size(dataEfast,1)
         if nParam<6
             b(1).CData(nParam,:) = hex2rgb(color_paleblue);
         elseif nParam<8
             b(1).CData(nParam,:) = hex2rgb(color_palered);
-        elseif nParam<9
-            b(1).CData(nParam,:) = hex2rgb(color_palegreen);
-        elseif nParam<size(tempSti,1)
+        elseif nParam<size(dataEfast,1)
             b(1).CData(nParam,:) = hex2rgb(color_paleorange);
         else
             b(1).CData(nParam,:) = hex2rgb(color_black);
@@ -1333,6 +1439,10 @@ cd(folder_code)
     xticks([1:size(tempSti,1)])
     ylabel('S_{Ti}')
     set(gca,'XTickLabel',temp_efast_var,'LineWidth',axis_linewidth,'FontSize',axis_fontsize)
+    set(fig,'Units','Inches');
+    pos = get(fig,'Position');
+    set(fig,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Supplementary Figure 6B - Only decreasing death rates of M2 macrophages
@@ -1502,6 +1612,84 @@ cd(folder_code)
     legend({'No treatment','Surgery+RT','SOC'},'Location','best','FontSize',legend_fontsize)
     set(gca,'LineWidth',axis_linewidth,'FontSize',axis_fontsize)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Supplementary Figure 8: Validity of virtual populations
+
+    optionsVP = options;
+    optionsVP.x_axis = timeVCT./30.417;
+    optionsVP.color_line = hex2rgb(color_blue);
+    optionsVP.color_area = hex2rgb(color_paleblue);
+
+    cd(folder_VCT)
+    load('M2M1ratiodata.mat')
+    load('karimiCellFrequency.mat')
+    cd(folder_code)
+
+    tNoTx = zeros(1,size(VCT_none,1));
+    for nP=1:length(tNoTx)
+        tNoTx(1,nP) = timeVCT(find(squeeze(VCT_none(nP,3,:))>=volDeath,1,'first'));
+    end
+    [minSurvival,indMinSurvival] = min(tNoTx);
+    [maxSurvival,indMaxSurvival] = max(tNoTx);
+
+    %Panel A: Tumour evolution without treatment
+    fig = figure;
+    hold on
+    plot(timeVCT./30.1417,squeeze(VCT_none(indMinSurvival,3,:)),'LineWidth',plot_linewidth,'Color',color_blue)
+    plot(timeVCT./30.1417,squeeze(VCT_none(indMaxSurvival,3,:)),'LineWidth',plot_linewidth,'Color',color_green)
+    yline(volDeath,'LineWidth',plot_linewidth,'Color',color_red)
+    x2 = [timeVCT./30.417 fliplr(timeVCT./30.417)];
+    inBetween = [squeeze(VCT_none(indMinSurvival,3,:))', fliplr(squeeze(VCT_none(indMaxSurvival,3,:))')];
+    yline(p.volDeath,'LineWidth',plot_linewidth,'LineStyle','-','Color',color_red)
+    fill(x2, inBetween, hex2rgb('#808080'),'FaceAlpha',0.15,'EdgeColor','none');
+    ylabel({'Tumour cells','(10^6 cells)'})
+    xlabel({'Time after diagnosis','(months)'})
+    xlim([0 10])
+    set(gca,'FontSize',axis_fontsize,'LineWidth',axis_linewidth)
+    legend({'Minimum survival','Maximum survival','Death threshold'},'FontSize',legend_fontsize)
+    set(fig,'Units','Inches');
+    pos = get(fig,'Position');
+    set(fig,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig)
+    
+    M1cells = squeeze(VCT_none(:,1,1));
+    M2cells = squeeze(VCT_none(:,2,1));
+    M0cells = squeeze(VCT_none(:,11,1));
+    CD8cells = squeeze(VCT_none(:,4,1));
+    TMEcells = M1cells+M2cells+M0cells+CD8cells;
+    CD8percent = 100.*CD8cells./TMEcells;
+    M2M1ratio = M2cells./M1cells;
+    
+    %Panel B: CD8+ T cell infiltration at diagnosis
+    fig1 = figure;
+    hold on
+    violinplot(CD8percent,{''},'ViolinColor',hex2rgb(color_blue),'MarkerSize',6,'MedianMarkerSize',10,'ShowBox',false)
+    plot([0.8 1.2],100.*[mean(karimiCellFrequency(:,1)) mean(karimiCellFrequency(:,1))],'LineWidth',3,'LineStyle',':','Color','black')
+    plot([0.8 1.2],[mean(CD8percent) mean(CD8percent)],'LineWidth',3,'LineStyle',':','Color',color_red)
+    xticks([1])
+    xticklabels({''})
+    ylabel({'CD8+ T cells','(% of TME cells)'})
+    set(gca,'FontSize',axis_fontsize,'LineWidth',axis_linewidth)
+    set(fig1,'Units','Inches');
+    pos = get(fig1,'Position');
+    set(fig1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig1)
+
+    %Panel C: M2M1 ratio at diagnosis
+    fig3 = figure;
+    hold on
+    violinplot(M2M1ratio,{''},'ViolinColor',hex2rgb(color_blue),'MarkerSize',6,'MedianMarkerSize',10,'ShowBox',false)
+    plot([0.8 1.2],[3.02 3.02],'LineWidth',3,'LineStyle',':','Color','black')
+    plot([0.8 1.2],[mean(M2M1ratio) mean(M2M1ratio)],'LineWidth',3,'LineStyle',':','Color',color_red)
+    xticks([1])
+    xticklabels({''})
+    ylabel('M2:M1 ratio')
+    ylim([0 5])
+    set(gca,'FontSize',axis_fontsize,'LineWidth',axis_linewidth)
+    set(fig3,'Units','Inches');
+    pos = get(fig3,'Position');
+    set(fig3,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+    printFig(fig3)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FUNCTIONS
 
